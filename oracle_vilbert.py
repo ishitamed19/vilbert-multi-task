@@ -40,7 +40,7 @@ import pandas as pd
 import ipdb
 st = ipdb.set_trace
 
-BATCH_SIZE = 2
+BATCH_SIZE = 5
 
 class FeatureExtractor:
     MAX_SIZE = 1333
@@ -433,7 +433,7 @@ dataloader = DataLoader(
         )
 
 
-list1=['filename','query','pred_bbox_x1','pred_bbox_y1','pred_bbox_x2','pred_bbox_y2','max_iou', 'correct']
+list1=['filename','query','pred_bbox_x1','pred_bbox_y1','pred_bbox_x2','pred_bbox_y2','max_iou']
 with open("oracle_vilbert.csv", "a") as fp:
     wr = csv.writer(fp, dialect='excel')
     wr.writerow(list1)
@@ -449,7 +449,7 @@ with torch.no_grad():
             print(step)
         _, infos = feature_extractor.extract_features(batch["file_path"])
         spatials = get_spatials(infos) # B x 100 x 4
-        for curr_b in range(BATCH_SIZE):
+        for curr_b in range(spatials.size()[0]):
             gt_boxes = batch["object_boxes"][curr_b].cuda() # NUM_QUERIES x 4
             iou_matrix = iou(spatials[curr_b], gt_boxes) # 100 x NUM_QUERIES
             max_iou_per_query, max_iou_per_query_idx = torch.max(iou_matrix, axis=0) # NUM_QUERIES

@@ -48,3 +48,4 @@ checkpoints/
 # virtualenv
 venv/
 ENV/
+vg200_boxes.npy

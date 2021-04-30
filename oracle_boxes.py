@@ -39,8 +39,9 @@ from types import SimpleNamespace
 import ipdb
 st = ipdb.set_trace
 
+import pkbar
+
 BATCH_SIZE = 1
-CSV_NAME = "full_vilbert_10feats.csv"
 
 class FeatureExtractor:
     MAX_SIZE = 1333
@@ -424,10 +425,23 @@ def iter2d_collate_fn(batch):
         "segment_ids": torch.cat([ex["segment_ids"] for ex in batch]),
     }
 
+def load_gt_feats(filename):
+    feat_dict = np.load(os.path.join("/projects/katefgroup/language_grounding/extra/vilbert_detectron_feats", filename[0][:-3] + 'npy'), allow_pickle=True)
+    feat_dict = feat_dict.item()
+    features = feat_dict.pop('features',None)
+    try:
+        assert features is not None
+    except:
+        print("None features")
+        st()
+        print(filename)
+    infos = [feat_dict]
+    features = torch.from_numpy(np.expand_dims(features,axis=0)).cuda()
+    return features, infos
+
 # =============================
 # ViLBERT part
 # =============================
-feature_extractor = FeatureExtractor()
 
 args = SimpleNamespace(from_pretrained= "save/multitask_model/pytorch_model_9.bin",
                        bert_model="bert-base-uncased",
@@ -504,19 +518,20 @@ dataloader = DataLoader(
         )
 
 
-list1=['filename','query','pred_bbox_subject','gt_bbox_subject','iou']
-with open(CSV_NAME, "a") as fp:
+list1=['filename','query','pred_bbox_subject','iou']
+with open("oracle_boxes.csv", "a") as fp:
     wr = csv.writer(fp, dialect='excel')
     wr.writerow(list1)
 
 num_correct = 0
 num_examples = 0
 
+kbar = pkbar.Kbar(target=len(dataloader), width=25)
 with torch.no_grad():
     for step, batch in enumerate(dataloader):
         if step>0:
             print(step, (num_correct/num_examples))
-        features, infos = feature_extractor.extract_features(batch["file_path"])
+        features, infos = load_gt_feats(batch["filename"])
         features, spatials, image_mask, co_attention_mask = process_feats(features, infos)
 
         num_queries = torch.tensor(batch["num_queries"]).cuda()
@@ -554,8 +569,8 @@ with torch.no_grad():
             if calc_iou > 0.3:
                 num_correct += 1
             num_examples += 1
-            stats.append([batch["file_path"][og_idx[curr_idx]], batch["og_sentences"][curr_idx], pred_box, batch["object_boxes"][curr_idx], calc_iou])
-        with open(CSV_NAME, "a") as f:
+            stats.append([batch["file_path"][og_idx[curr_idx]], batch["og_sentences"][curr_idx], pred_box, calc_iou])
+        with open("oracle_boxes", "a") as f:
             writer = csv.writer(f)
             writer.writerows(stats)
 

@@ -20,6 +20,7 @@ from maskrcnn_benchmark.structures.bounding_box import BoxList
 from maskrcnn_benchmark.structures.image_list import to_image_list
 from maskrcnn_benchmark.utils.model_serialization import load_state_dict
 
+import pkbar
 
 class FeatureExtractor:
     MAX_SIZE = 1333
@@ -233,15 +234,19 @@ class FeatureExtractor:
 
     def extract_features(self):
         files = np.load(self.args.imdb_gt_file, allow_pickle=True)
+        kbar = pkbar.Kbar(target=len(files), width=25)
         # files = sorted(files)
         # files = [files[i: i+1000] for i in range(0, len(files), 1000)][self.args.partition]
+        curr_chunk = 0
         for chunk in self._chunks(files, self.args.batch_size):
+            curr_chunk += 1
             try:
                 features, infos = self.get_detectron_features(chunk)
                 for idx, c in enumerate(chunk):
                     self._save_feature(c["file_name"], features[idx], infos[idx])
             except BaseException:
                 continue
+            kbar.update(curr_chunk, [("curr_chunk", curr_chunk)])
 
 
 if __name__ == "__main__":

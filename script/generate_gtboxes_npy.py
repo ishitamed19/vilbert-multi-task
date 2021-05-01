@@ -65,10 +65,10 @@ class IterDataset2d():
         """Return rois for objects of given image."""
         boxes = np.array(anno['objects']['boxes'])
         boxes = np.round(boxes[:, (2, 0, 3, 1)])
-        width = boxes[:, 2] - boxes[:, 0]
-        height = boxes[:, 3] - boxes[:, 1]
-        boxes[:, 2] = width
-        boxes[:, 3] = height
+        # width = boxes[:, 2] - boxes[:, 0]
+        # height = boxes[:, 3] - boxes[:, 1]
+        # boxes[:, 2] = width
+        # boxes[:, 3] = height
         return boxes
 
     @staticmethod
@@ -90,6 +90,6 @@ if __name__=="__main__":
     for idx in tqdm(range(vg_dataset.__len__())):
         curr_sample = vg_dataset.__getitem__(idx)
         to_save.append(curr_sample)
-    with open('vg200_boxes.npy', 'wb') as f:
+    with open('vg200_boxes_xyxy.npy', 'wb') as f:
         np.save(f, to_save)
 

@@ -50,3 +50,4 @@ venv/
 ENV/
 vg200_boxes.npy
 oracle_boxes
+vg200_boxes_xyxy.npy

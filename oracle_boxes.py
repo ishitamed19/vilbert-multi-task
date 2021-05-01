@@ -426,7 +426,7 @@ def iter2d_collate_fn(batch):
     }
 
 def load_gt_feats(filename):
-    feat_dict = np.load(os.path.join("/projects/katefgroup/language_grounding/extra/vilbert_detectron_feats", filename[0][:-3] + 'npy'), allow_pickle=True)
+    feat_dict = np.load(os.path.join("/projects/katefgroup/language_grounding/extra/vilbert_feats_new", filename[0][:-3] + 'npy'), allow_pickle=True)
     feat_dict = feat_dict.item()
     features = feat_dict.pop('features',None)
     try:
@@ -518,8 +518,8 @@ dataloader = DataLoader(
         )
 
 
-list1=['filename','query','pred_bbox_subject','iou']
-with open("oracle_boxes.csv", "a") as fp:
+list1=['filename','query','gt_bbox_subject','pred_bbox_subject','iou']
+with open("oracle_boxes_new.csv", "a") as fp:
     wr = csv.writer(fp, dialect='excel')
     wr.writerow(list1)
 
@@ -569,8 +569,8 @@ with torch.no_grad():
             if calc_iou > 0.3:
                 num_correct += 1
             num_examples += 1
-            stats.append([batch["file_path"][og_idx[curr_idx]], batch["og_sentences"][curr_idx], pred_box, calc_iou])
-        with open("oracle_boxes", "a") as f:
+            stats.append([batch["file_path"][og_idx[curr_idx]], batch["og_sentences"][curr_idx], batch["object_boxes"][curr_idx], pred_box, calc_iou])
+        with open("oracle_boxes_new.csv", "a") as f:
             writer = csv.writer(f)
             writer.writerows(stats)
 
